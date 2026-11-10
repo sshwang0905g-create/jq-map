@@ -1,8 +1,8 @@
 {
-  "id": "/jq-map/silgeorae/",
-  "name": "진주시 실거래가",
+  "id": "/jq-map/silgeorae/?app=silgeorae2",
+  "name": "진주퀸 실거래",
   "short_name": "실거래",
-  "start_url": "./",
+  "start_url": "./?app=silgeorae2",
   "scope": "./",
   "display": "standalone",
   "background_color": "#EA580C",
