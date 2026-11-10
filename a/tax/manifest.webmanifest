@@ -2,7 +2,7 @@
   "id": "/jq-map/a/tax/",
   "name": "세무자문",
   "short_name": "세무자문",
-  "start_url": "./",
+  "start_url": "./?app=1",
   "scope": "./",
   "display": "standalone",
   "background_color": "#0F766E",
