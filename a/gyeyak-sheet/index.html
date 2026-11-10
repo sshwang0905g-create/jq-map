@@ -22,7 +22,7 @@
 <script>
   // 홈 화면에 설치한 아이콘으로 열었을 때만 바로 이동한다.
   // (브라우저로 처음 열었을 때 이동해 버리면 설치 아이콘이 다른 사이트 것으로 잡히기 때문)
-  var installed = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+  var installed = /[?&]app=1/.test(location.search);  // 설치한 아이콘은 ?app=1 주소로 열린다
   if (installed) {
     setTimeout(function () { location.replace(document.getElementById('go').href); }, 300);
   } else {
