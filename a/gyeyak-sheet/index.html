@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>계약시트</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#FFD600">
+<style>body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#FFD600;font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif}img{width:120px;height:120px}a{color:#fff;background:rgba(0,0,0,.35);padding:12px 22px;border-radius:12px;text-decoration:none;font-size:16px}</style>
+</head>
+<body>
+<img src="icon-512.png" alt="">
+<a id="go" href="https://docs.google.com/spreadsheets/d/1uhbaXvx50YEZrzGGfqhA-KfZYzETzqXzTOshQ8vjDc8/edit">계약시트 열기</a>
+<script>
+  // 설치한 앱 아이콘을 누르면 바로 구글 시트로 이동 (본인 구글 계정으로만 열림)
+  setTimeout(function () { location.replace(document.getElementById('go').href); }, 300);
+</script>
+</body>
+</html>
