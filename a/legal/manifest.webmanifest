@@ -2,7 +2,7 @@
   "id": "/jq-map/a/legal/",
   "name": "법률자문",
   "short_name": "법률자문",
-  "start_url": "./",
+  "start_url": "./?app=1",
   "scope": "./",
   "display": "standalone",
   "background_color": "#4338CA",
