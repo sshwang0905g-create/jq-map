@@ -1,0 +1,15 @@
+{
+  "id": "/jq-map/a/maemul-sheet/",
+  "name": "매물시트",
+  "short_name": "매물시트",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#DB2777",
+  "theme_color": "#DB2777",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
