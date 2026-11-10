@@ -1,6 +1,6 @@
 {
   "id": "/jq-map/silgeorae/",
-  "name": "진주시 실거래 대시보드",
+  "name": "진주시 실거래가",
   "short_name": "실거래",
   "start_url": "./",
   "scope": "./",
