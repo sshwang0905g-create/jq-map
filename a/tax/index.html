@@ -15,9 +15,20 @@
 <img src="icon-512.png" alt="">
 <a id="go" href="https://claude.ai/new?q=%5B%EC%84%B8%EB%AC%B4%20%EC%9E%90%EB%AC%B8%5D%20%EC%A0%80%EB%8A%94%20%EC%A7%84%EC%A3%BC%20%ED%98%81%EC%8B%A0%EB%8F%84%EC%8B%9C%20%EA%B3%B5%EC%9D%B8%EC%A4%91%EA%B0%9C%EC%82%AC%EC%9E%85%EB%8B%88%EB%8B%A4.%20%EC%95%84%EB%9E%98%20%EC%A7%88%EB%AC%B8%EC%97%90%20%EC%96%91%EB%8F%84%EC%84%B8%C2%B7%EC%B7%A8%EB%93%9D%EC%84%B8%C2%B7%EC%A2%85%EB%B6%80%EC%84%B8%C2%B7%EC%A2%85%EC%86%8C%EC%84%B8%C2%B7%EB%B6%80%EA%B0%80%EC%84%B8%20%EB%93%B1%20%EC%98%A4%EB%8A%98%20%EA%B8%B0%EC%A4%80%20%ED%98%84%ED%96%89%20%EC%84%B8%EB%B2%95%EA%B3%BC%20%EC%8B%9C%ED%96%89%20%EC%98%88%EC%A0%95%20%EA%B0%9C%EC%A0%95%EC%9D%84%20korean-law%20%EB%8F%84%EA%B5%AC%EB%A1%9C%20%ED%99%95%EC%9D%B8%ED%95%B4%EC%84%9C%2C%20%EA%B7%BC%EA%B1%B0%20%EC%A1%B0%EB%AC%B8%EA%B3%BC%20%EA%B3%84%EC%82%B0%20%EA%B3%BC%EC%A0%95%EC%9D%84%20%ED%95%9C%EA%B5%AD%EC%96%B4%EB%A1%9C%20%EB%8B%B5%ED%95%B4%20%EC%A3%BC%EC%84%B8%EC%9A%94.%0A%0A%EC%A7%88%EB%AC%B8%3A%20">Claude에서 세무자문 시작</a>
 <p>Claude가 열리면 입력칸 맨 끝에 질문을 이어서 쓰고 보내면 됩니다.</p>
+<div id="inst" style="display:none;background:rgba(255,255,255,.95);color:#222;border-radius:14px;padding:14px 16px;max-width:320px;font-size:14.5px;line-height:1.7;text-align:left">
+<b>📲 홈 화면에 설치하기</b><br>
+안드로이드: 크롬 오른쪽 위 <b>⋮ → 홈 화면에 추가 → 설치</b><br>
+아이폰: 사파리 아래 <b>공유 → 홈 화면에 추가</b><br>
+설치한 아이콘을 누르면 바로 열립니다.</div>
 <script>
-  // 설치한 아이콘을 누르면 자문 안내가 채워진 Claude 새 대화로 이동
-  setTimeout(function () { location.replace(document.getElementById('go').href); }, 400);
+  // 홈 화면에 설치한 아이콘으로 열었을 때만 바로 이동한다.
+  // (브라우저로 처음 열었을 때 이동해 버리면 설치 아이콘이 다른 사이트 것으로 잡히기 때문)
+  var installed = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+  if (installed) {
+    setTimeout(function () { location.replace(document.getElementById('go').href); }, 300);
+  } else {
+    document.getElementById('inst').style.display = 'block';
+  }
 </script>
 </body>
 </html>
