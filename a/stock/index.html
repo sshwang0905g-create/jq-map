@@ -14,9 +14,20 @@
 <body>
 <img src="icon-512.png" alt="">
 <a id="go" href="https://docs.google.com/spreadsheets/d/1YwqTliqnLK8gZl5oBrj4IcEn8ljk4_JQKAV5MKEV_k0/edit">주식관리 열기</a>
+<div id="inst" style="display:none;background:rgba(255,255,255,.95);color:#222;border-radius:14px;padding:14px 16px;max-width:320px;font-size:14.5px;line-height:1.7;text-align:left">
+<b>📲 홈 화면에 설치하기</b><br>
+안드로이드: 크롬 오른쪽 위 <b>⋮ → 홈 화면에 추가 → 설치</b><br>
+아이폰: 사파리 아래 <b>공유 → 홈 화면에 추가</b><br>
+설치한 아이콘을 누르면 바로 열립니다.</div>
 <script>
-  // 설치한 앱 아이콘을 누르면 바로 구글 시트로 이동 (본인 구글 계정으로만 열림)
-  setTimeout(function () { location.replace(document.getElementById('go').href); }, 300);
+  // 홈 화면에 설치한 아이콘으로 열었을 때만 바로 이동한다.
+  // (브라우저로 처음 열었을 때 이동해 버리면 설치 아이콘이 다른 사이트 것으로 잡히기 때문)
+  var installed = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true;
+  if (installed) {
+    setTimeout(function () { location.replace(document.getElementById('go').href); }, 300);
+  } else {
+    document.getElementById('inst').style.display = 'block';
+  }
 </script>
 </body>
 </html>
