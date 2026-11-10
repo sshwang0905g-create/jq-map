@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>실거래</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#EA580C">
+<style>
+  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#1e3a8a,#1a73e8);font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;color:#191c3a}
+  .box{background:#fff;border-radius:18px;padding:28px 22px;width:min(340px,calc(100vw - 32px));box-sizing:border-box;box-shadow:0 10px 30px rgba(0,0,0,.25);text-align:center}
+  h1{font-size:20px;margin:0 0 6px}
+  p{font-size:13.5px;color:#555;margin:0 0 16px}
+  input[type=password]{width:100%;box-sizing:border-box;font-size:17px;padding:12px;border:1px solid #c9cde0;border-radius:10px}
+  label{display:block;font-size:13px;color:#555;margin:12px 0;text-align:left}
+  button{width:100%;font-size:16px;padding:12px;border:0;border-radius:10px;background:#1a73e8;color:#fff;font-weight:bold}
+  #msg{min-height:20px;font-size:13px;color:#c0392b;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="box" id="box">
+  <h1>🔒 실거래 대시보드</h1>
+  <p>본인 전용 지도입니다. 비밀번호를 입력하세요.</p>
+  <form id="f">
+    <input type="password" id="pw" autocomplete="current-password" placeholder="비밀번호">
+    <label><input type="checkbox" id="keep" checked> 이 기기에서 2시간 동안 로그인 유지</label>
+    <button type="submit">열기</button>
+  </form>
+  <div id="msg"></div>
+</div>
+<script>
+const SALT = 'jinjuqueen-map-v1', ITER = 310000, STORE = 'jq-map-key-v2', KEEP_MS = 2 * 60 * 60 * 1000;  // 로그인 유지 2시간
+try { localStorage.removeItem('jq-map-key-v1'); } catch (e) {}
+const msg = t => document.getElementById('msg').textContent = t;
+
+async function deriveRaw(pw) {
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: new TextEncoder().encode(SALT), iterations: ITER, hash: 'SHA-256' }, base, 256);
+  return new Uint8Array(bits);
+}
+async function decryptUrl(url, raw) {
+  const buf = new Uint8Array(await (await fetch(url + '?t=' + Date.now(), { cache: 'no-store' })).arrayBuffer());
+  const key = await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt']);
+  const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: buf.slice(0, 12) }, key, buf.slice(12));
+  const stream = new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'));
+  return await new Response(stream).text();
+}
+const b64 = u => btoa(String.fromCharCode(...u));
+const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+
+// exp: 로그인이 끝나는 시각. 처음 비밀번호를 넣은 때부터 2시간이며, 다시 열어도 연장하지 않는다.
+async function open(raw, keep, exp) {
+  msg('여는 중...');
+  const html = await decryptUrl('map.bin', raw);
+  if (keep) { try { localStorage.setItem(STORE, JSON.stringify({ k: b64(raw), exp })); } catch (e) {} }
+  // 지도 화면을 열어 둔 채로 2시간이 지나면 잠금 화면으로 돌아간다.
+  const lock = 'setTimeout(function(){location.reload();},' + Math.max(0, exp - Date.now()) + ');';
+  // 상세정보(detail.js)도 암호화되어 있으므로, 지도 안에서 필요할 때 풀어서 불러온다.
+  const helper = '<script>' + lock + 'window.__JQ_RAW="' + b64(raw) + '";' +
+    'window.__jqDetail=async function(){if(window.DETAIL)return;' +
+    'const r=Uint8Array.from(atob(window.__JQ_RAW),c=>c.charCodeAt(0));' +
+    'const b=new Uint8Array(await (await fetch("detail.bin?t="+Date.now(),{cache:"no-store"})).arrayBuffer());' +
+    'const k=await crypto.subtle.importKey("raw",r,"AES-GCM",false,["decrypt"]);' +
+    'const p=await crypto.subtle.decrypt({name:"AES-GCM",iv:b.slice(0,12)},k,b.slice(12));' +
+    'const t=await new Response(new Blob([p]).stream().pipeThrough(new DecompressionStream("gzip"))).text();' +
+    '(0,eval)(t);};<\/script>';
+  const out = html
+    .replace(/loadScript\('detail\.js[^']*'\)/g, 'window.__jqDetail()')
+    .replace(/<head([^>]*)>/i, '<head$1>' + helper);
+  document.open(); document.write(out); document.close();
+}
+
+(async () => {
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(STORE) || 'null'); } catch (e) {}
+  if (saved && !(saved.exp > Date.now())) {
+    try { localStorage.removeItem(STORE); } catch (e) {}
+    saved = null;
+    msg('로그인 시간(2시간)이 지났습니다. 다시 입력해 주세요.');
+  }
+  if (saved) {
+    try { await open(unb64(saved.k), false, saved.exp); return; }
+    catch (e) { try { localStorage.removeItem(STORE); } catch (_) {} msg('비밀번호가 바뀌었습니다. 다시 입력해 주세요.'); }
+  }
+  document.getElementById('f').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const pw = document.getElementById('pw').value;
+    if (!pw) return;
+    try { await open(await deriveRaw(pw), document.getElementById('keep').checked, Date.now() + KEEP_MS); }
+    catch (e) { msg('비밀번호가 맞지 않습니다.'); }
+  });
+})();
+</script>
+</body>
+</html>
