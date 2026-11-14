@@ -10,24 +10,74 @@
 <link rel="apple-touch-icon" href="apple-touch-icon-v3.png">
 <meta name="apple-mobile-web-app-title" content="진주퀸매물장">
 <meta name="theme-color" content="#6D28D9">
-<style>body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#6D28D9;font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif}img{width:120px;height:120px}a{color:#fff;background:rgba(0,0,0,.35);padding:12px 22px;border-radius:12px;text-decoration:none;font-size:16px}</style>
+<style>
+  body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:#6D28D9;font-family:"Malgun Gothic","Apple SD Gothic Neo",sans-serif;color:#191c3a}
+  img.ic{width:96px;height:96px}
+  .box{background:#fff;border-radius:18px;padding:24px 20px;width:min(330px,calc(100vw - 32px));box-sizing:border-box;box-shadow:0 10px 30px rgba(0,0,0,.25);text-align:center}
+  h1{font-size:19px;margin:0 0 6px} p{font-size:13.5px;color:#555;margin:0 0 14px;line-height:1.6}
+  input[type=password]{width:100%;box-sizing:border-box;font-size:17px;padding:12px;border:1px solid #c9cde0;border-radius:10px}
+  label{display:block;font-size:13px;color:#555;margin:12px 0;text-align:left}
+  button{width:100%;font-size:16px;padding:12px;border:0;border-radius:10px;background:#6D28D9;color:#fff;font-weight:bold}
+  #msg{min-height:20px;font-size:13px;color:#c0392b;margin-top:10px}
+  .inst{text-align:left;font-size:14px;line-height:1.75;color:#222}
+</style>
 </head>
 <body>
-<img src="icon-512-v3.png" alt="">
-<a id="go" href="https://script.google.com/macros/s/AKfycbyoyPtpI0Ix6wLXqe571dEuiwLVsrGQe5Jw-q4RSuUKYITMsgkXk51IFdb-f-ujoTTG/exec">진주퀸매물장 열기</a>
-<div id="inst" style="display:none;background:rgba(255,255,255,.95);color:#222;border-radius:14px;padding:14px 16px;max-width:320px;font-size:14.5px;line-height:1.7;text-align:left">
+<img class="ic" src="icon-512-v3.png" alt="">
+<div class="box" id="lock" style="display:none">
+  <h1>🔒 진주퀸매물장</h1>
+  <p>진주퀸 전용입니다. 비밀번호를 입력하세요.<br>(매물지도·실거래와 같은 비밀번호)</p>
+  <form id="f">
+    <input type="password" id="pw" autocomplete="current-password" placeholder="비밀번호">
+    <label><input type="checkbox" id="keep" checked> 이 기기에서 2시간 동안 로그인 유지</label>
+    <button type="submit">열기</button>
+  </form>
+  <div id="msg"></div>
+</div>
+<div class="box inst" id="inst" style="display:none">
 <b>📲 홈 화면에 설치하기</b><br>
 안드로이드: 크롬 오른쪽 위 <b>⋮ → 홈 화면에 추가 → 설치</b><br>
 아이폰: 사파리 아래 <b>공유 → 홈 화면에 추가</b><br>
-설치한 아이콘을 누르면 바로 열립니다. 진주퀸 구글 계정으로 로그인되어 있어야 열립니다.</div>
+설치한 아이콘을 누르면 비밀번호를 묻고 바로 열립니다.</div>
 <script>
-  // 홈 화면에 설치한 아이콘으로 열었을 때만 바로 이동한다(?app=1).
-  var installed = /[?&]app=1/.test(location.search);
-  if (installed) {
-    setTimeout(function () { location.replace(document.getElementById('go').href); }, 300);
-  } else {
-    document.getElementById('inst').style.display = 'block';
+const SALT = 'jinjuqueen-map-v1', ITER = 310000, STORE = 'jq-map-key-v2', KEEP_MS = 2 * 60 * 60 * 1000;
+const $ = id => document.getElementById(id), msg = t => $('msg').textContent = t;
+const b64 = u => btoa(String.fromCharCode(...u)), unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function deriveRaw(pw) {
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']);
+  return new Uint8Array(await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: new TextEncoder().encode(SALT), iterations: ITER, hash: 'SHA-256' }, base, 256));
+}
+async function target(raw) {
+  const buf = new Uint8Array(await (await fetch('go.bin?t=' + Date.now(), { cache: 'no-store' })).arrayBuffer());
+  const key = await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt']);
+  const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: buf.slice(0, 12) }, key, buf.slice(12));
+  return (await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text()).trim();
+}
+async function go(raw, keep, exp) {
+  msg('여는 중...');
+  const url = await target(raw);
+  if (keep) { try { localStorage.setItem(STORE, JSON.stringify({ k: b64(raw), exp })); } catch (e) {} }
+  location.replace(url);
+}
+(async () => {
+  // 홈 화면에 설치한 아이콘(?app=1)으로 열었을 때만 잠금 화면 → 이동. 브라우저로 처음 열면 설치 안내만.
+  if (!/[?&]app=1/.test(location.search)) { $('inst').style.display = 'block'; return; }
+  $('lock').style.display = 'block';
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(STORE) || 'null'); } catch (e) {}
+  if (saved && !(saved.exp > Date.now())) { try { localStorage.removeItem(STORE); } catch (e) {} saved = null; msg('로그인 시간(2시간)이 지났습니다. 다시 입력해 주세요.'); }
+  if (saved) {
+    try { await go(unb64(saved.k), false, saved.exp); return; }
+    catch (e) { try { localStorage.removeItem(STORE); } catch (_) {} msg('비밀번호가 바뀌었습니다. 다시 입력해 주세요.'); }
   }
+  $('pw').focus();
+  $('f').addEventListener('submit', async ev => {
+    ev.preventDefault();
+    const pw = $('pw').value; if (!pw) return;
+    try { await go(await deriveRaw(pw), $('keep').checked, Date.now() + KEEP_MS); }
+    catch (e) { msg('비밀번호가 맞지 않습니다.'); }
+  });
+})();
 </script>
 </body>
 </html>
